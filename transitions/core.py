@@ -143,6 +143,7 @@ class Condition(object):
 class Transition(object):
 
     dynamic_methods = ['before', 'after', 'prepare']
+    condition_cls = Condition
 
     def __init__(self, source, dest, conditions=None, unless=None, before=None,
                  after=None, prepare=None):
@@ -171,10 +172,10 @@ class Transition(object):
         self.conditions = []
         if conditions is not None:
             for c in listify(conditions):
-                self.conditions.append(Condition(c))
+                self.conditions.append(self._create_condition(c))
         if unless is not None:
             for u in listify(unless):
-                self.conditions.append(Condition(u, target=False))
+                self.conditions.append(self._create_condition(u, target=False))
 
     def execute(self, event_data):
         """ Execute the transition.
@@ -222,6 +223,10 @@ class Transition(object):
         """
         callback_list = getattr(self, trigger)
         callback_list.append(func)
+
+    @classmethod
+    def _create_condition(cls, *args, **kwargs):
+        return cls.condition_cls(*args, **kwargs)
 
     def __repr__(self):
         return "<%s('%s', '%s')@%s>" % (type(self).__name__,
