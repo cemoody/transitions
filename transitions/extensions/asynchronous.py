@@ -32,18 +32,14 @@ class AsyncCondition(Condition):
 
     @asyncio.coroutine
     def check(self, event_data):
-        predicate = getattr(event_data.model, self.func) if isinstance(
-            self.func, string_types) else self.func
+        return (yield from super(AsyncCondition, self).check(event_data))
 
-        if event_data.machine.send_event:
-            condition_check = predicate(event_data)
-        else:
-            condition_check = predicate(*event_data.args, **event_data.kwargs)
+    @asyncio.coroutine
+    def _condition_check(self, statement):
+        if asyncio.iscoroutine(statement):
+            statement = yield from statement
 
-        if asyncio.iscoroutine(condition_check):
-            condition_check = yield from condition_check
-
-        return condition_check == self.target
+        return statement == self.target
 
 
 class AsyncTransition(Transition):

@@ -131,10 +131,14 @@ class Condition(object):
         predicate = getattr(event_data.model, self.func) if isinstance(self.func, string_types) else self.func
 
         if event_data.machine.send_event:
-            return predicate(event_data) == self.target
+            statement = predicate(event_data)
         else:
-            return predicate(
-                *event_data.args, **event_data.kwargs) == self.target
+            statement = predicate(*event_data.args, **event_data.kwargs)
+
+        return self._condition_check(statement)
+
+    def _condition_check(self, statement):
+        return statement == self.target
 
     def __repr__(self):
         return "<%s(%s)@%s>" % (type(self).__name__, self.func, id(self))
